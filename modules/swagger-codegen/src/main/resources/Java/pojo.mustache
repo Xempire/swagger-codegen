@@ -2,7 +2,7 @@
  * {{#description}}{{.}}{{/description}}{{^description}}{{classname}}{{/description}}
  */{{#description}}
 @ApiModel(description = "{{{description}}}"){{/description}}
-{{>generatedAnnotation}}{{#discriminator}}{{>typeInfoAnnotation}}{{/discriminator}}
+{{>generatedAnnotation}}{{#discriminator}}{{>typeInfoAnnotation}}{{/discriminator}}{{>xmlAnnotation}}
 public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcelableModel}}implements Parcelable {{#serializableModel}}, Serializable {{/serializableModel}}{{/parcelableModel}}{{^parcelableModel}}{{#serializableModel}}implements Serializable {{/serializableModel}}{{/parcelableModel}}{
 {{#serializableModel}}
   private static final long serialVersionUID = 1L;
@@ -23,7 +23,39 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
     {{/items.isEnum}}
   {{#jackson}}
   @JsonProperty("{{baseName}}")
+  {{#withXml}}
+    {{^isContainer}}
+  @JacksonXmlProperty({{#isXmlAttribute}}isAttribute = true, {{/isXmlAttribute}}{{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}localName = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+    {{/isContainer}}
+    {{#isContainer}}
+      {{#isXmlWrapped}}
+  // items.xmlName={{items.xmlName}}
+  @JacksonXmlElementWrapper(useWrapping = {{isXmlWrapped}}, {{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}localName = "{{#items.xmlName}}{{items.xmlName}}{{/items.xmlName}}{{^items.xmlName}}{{items.baseName}}{{/items.xmlName}}")
+      {{/isXmlWrapped}}
+    {{/isContainer}}
+  {{/withXml}}
   {{/jackson}}
+  {{#withXml}}
+  {{#isXmlAttribute}}
+  @XmlAttribute(name = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+  {{/isXmlAttribute}}
+  {{^isXmlAttribute}}
+    {{^isContainer}}
+  @XmlElement({{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}name = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+    {{/isContainer}}
+    {{#isContainer}}
+  // Is a container wrapped={{isXmlWrapped}}
+      {{#items}}
+  // items.name={{name}} items.baseName={{baseName}} items.xmlName={{xmlName}} items.xmlNamespace={{xmlNamespace}}
+  // items.example={{example}} items.type={{datatype}}
+  @XmlElement({{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}name = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+      {{/items}}
+      {{#isXmlWrapped}}
+  @XmlElementWrapper({{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}name = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+      {{/isXmlWrapped}}
+    {{/isContainer}}
+  {{/isXmlAttribute}}
+  {{/withXml}}
   {{#gson}}
   @SerializedName("{{baseName}}")
   {{/gson}}
@@ -35,6 +67,13 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
   {{/isContainer}}
 
   {{/vars}}
+  {{#gson}}
+  {{#discriminator}}
+  public {{classname}}() {
+    this.{{discriminator}} = this.getClass().getSimpleName();
+  }
+  {{/discriminator}}
+  {{/gson}}
   {{#vars}}
   {{^isReadOnly}}
   public {{classname}} {{name}}({{{datatypeWithEnum}}} {{name}}) {
@@ -69,7 +108,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
   {{/isReadOnly}}
    /**
   {{#description}}
-   * {{{description}}}
+   * {{description}}
   {{/description}}
   {{^description}}
    * Get {{name}}
@@ -86,7 +125,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
 {{#vendorExtensions.extraAnnotation}}
   {{{vendorExtensions.extraAnnotation}}}
 {{/vendorExtensions.extraAnnotation}}
-  public {{{datatypeWithEnum}}} {{getter}}() {
+  public {{{datatypeWithEnum}}} {{#isBoolean}}is{{/isBoolean}}{{getter}}() {
     return {{name}};
   }
   {{^isReadOnly}}
@@ -108,7 +147,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
       return false;
     }{{#hasVars}}
     {{classname}} {{classVarName}} = ({{classname}}) o;
-    return {{#vars}}Objects.equals(this.{{name}}, {{classVarName}}.{{name}}){{#hasMore}} &&
+    return {{#vars}}{{#isByteArray}}Arrays{{/isByteArray}}{{#isBinary}}Arrays{{/isBinary}}{{^isByteArray}}{{^isBinary}}Objects{{/isBinary}}{{/isByteArray}}.equals(this.{{name}}, {{classVarName}}.{{name}}){{#hasMore}} &&
         {{/hasMore}}{{/vars}}{{#parent}} &&
         super.equals(o){{/parent}};{{/hasVars}}{{^hasVars}}
     return {{#parent}}super.equals(o){{/parent}}{{^parent}}true{{/parent}};{{/hasVars}}
@@ -116,7 +155,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
 
   @Override
   public int hashCode() {
-    return Objects.hash({{#vars}}{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
+    return Objects.hash({{#vars}}{{^isByteArray}}{{^isBinary}}{{name}}{{/isBinary}}{{/isByteArray}}{{#isByteArray}}Arrays.hashCode({{name}}){{/isByteArray}}{{#isBinary}}Arrays.hashCode({{name}}){{/isBinary}}{{#hasMore}}, {{/hasMore}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
   }
 
 {{/supportJava6}}
@@ -163,7 +202,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
     }
     return o.toString().replace("\n", "\n    ");
   }
-  
+
   {{#parcelableModel}}
   public void writeToParcel(Parcel out, int flags) {
     {{#parent}} super.writeToParcel(out, flags); {{/parent}} {{#vars}}
@@ -186,7 +225,7 @@ public class {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{{#parcela
     {{/isPrimitiveType}}
     {{/vars}}
   }
-  
+
   public int describeContents() {
     return 0;
   }

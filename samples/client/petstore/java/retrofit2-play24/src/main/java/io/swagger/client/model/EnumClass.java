@@ -14,7 +14,9 @@
 package io.swagger.client.model;
 
 import java.util.Objects;
+import java.util.Arrays;
 import javax.validation.constraints.*;
+import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -36,8 +38,12 @@ public enum EnumClass {
     this.value = value;
   }
 
-  @Override
   @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
   public String toString() {
     return String.valueOf(value);
   }

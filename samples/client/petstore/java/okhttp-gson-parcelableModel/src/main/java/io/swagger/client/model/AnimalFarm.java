@@ -14,6 +14,7 @@
 package io.swagger.client.model;
 
 import java.util.Objects;
+import java.util.Arrays;
 import io.swagger.client.model.Animal;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,7 @@ public class AnimalFarm extends ArrayList<Animal> implements Parcelable {
     }
     return o.toString().replace("\n", "\n    ");
   }
-  
+
   public void writeToParcel(Parcel out, int flags) {
      super.writeToParcel(out, flags);    }
 
@@ -73,7 +74,7 @@ public class AnimalFarm extends ArrayList<Animal> implements Parcelable {
   AnimalFarm(Parcel in) {
      super(in); 
   }
-  
+
   public int describeContents() {
     return 0;
   }
