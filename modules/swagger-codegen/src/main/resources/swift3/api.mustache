@@ -42,6 +42,7 @@ open class {{classname}}: APIBase {
                 return
             }
             {{operationId}}WithRequestBuilder({{#allParams}}{{paramName}}: {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}).execute { (response, error) -> Void in
+                AuthService.process(error: error)
                 completion({{#returnType}}response?.body, {{/returnType}}error)
             }
         }
