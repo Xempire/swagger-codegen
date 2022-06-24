@@ -93,6 +93,8 @@ open class AlamofireRequestBuilder<T>: RequestBuilder<T> {
                     self.processRequest(request: upload, managerId, completion)
                 case .failure(let encodingError):
                     completion(nil, ErrorResponse.Error(self.path, self.URLString, 415, nil, encodingError))
+                @unknown default:
+                    fatalError("Unhandled enum case \(encodingResult)")
                 }
             })
         } else {
